@@ -1,0 +1,3 @@
+{
+    "solidity.packageDefaultDependenciesDirectory": "chickenverse-hardhat/node_modules"
+}
