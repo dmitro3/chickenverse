@@ -10,6 +10,7 @@ import useContract from "@/hooks/useContract";
 import Modal from "@/components/Modal";
 
 import Button from "@/components/atoms/Button";
+import Footer from "@/components/atoms/Footer";
 
 const Home = () => {
     const { wallet, connectWallet } = useWallet();
@@ -47,9 +48,7 @@ const Home = () => {
                     <ConnectMetamask className="mt-4" onClick={connectWallet} />
                 )}
 
-                <footer className="py-8 text-slate-400 text-sm">
-                    Made by Nathan Pham
-                </footer>
+                <Footer />
             </main>
 
             <Preview />
