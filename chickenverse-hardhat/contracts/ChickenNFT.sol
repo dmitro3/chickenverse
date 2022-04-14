@@ -2,8 +2,6 @@
 
 pragma solidity ^0.8.4;
 
-pragma solidity ^0.8.4;
-
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -11,12 +9,14 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 
 contract ChickenNFT is ERC721, ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
-
     Counters.Counter private _tokenIdCounter;
 
-    mapping(string => uint256) existingURIs;
+    mapping(string => bool) existingURIs;
+    mapping(address => uint256) nftHolders;
 
-    constructor() ERC721("ChickenNFT", "CV") {}
+    constructor() ERC721("ChickenNFT", "CV") {
+        _tokenIdCounter.increment();
+    }
 
     function _baseURI() internal pure override returns (string memory) {
         return "ipfs://";
@@ -47,8 +47,12 @@ contract ChickenNFT is ERC721, ERC721URIStorage, Ownable {
         return super.tokenURI(tokenId);
     }
 
+    function getNFT(address recipient) public view returns (uint256) {
+        return nftHolders[recipient];
+    }
+
     function isContentOwned(string memory uri) public view returns (bool) {
-        return existingURIs[uri] == 1;
+        return existingURIs[uri];
     }
 
     function payMint(address recipient, string memory metadataURI)
@@ -56,15 +60,22 @@ contract ChickenNFT is ERC721, ERC721URIStorage, Ownable {
         payable
         returns (uint256)
     {
-        require(existingURIs[metadataURI] != 1, "Content already owned");
+        require(!existingURIs[metadataURI], "Content already owned");
         require(
             msg.value >= 0.001 ether,
             "Payment must be at least 0.001 ether"
         );
 
+        // only allow 1 mint per address
+        require(nftHolders[recipient] == 0, "Already minted");
+
         uint256 newItemId = _tokenIdCounter.current();
+
+        require(newItemId > 0 && newItemId < 1000, "Too many items created");
+
         _tokenIdCounter.increment();
-        existingURIs[metadataURI] = 1;
+        existingURIs[metadataURI] = true;
+        nftHolders[recipient] = newItemId;
 
         _mint(recipient, newItemId);
         _setTokenURI(newItemId, metadataURI);

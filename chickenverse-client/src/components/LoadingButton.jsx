@@ -1,3 +1,5 @@
+import Button from "./atoms/Button";
+
 const Loading = () => (
     <svg
         className="animate-spin h-5 w-5"
@@ -21,4 +23,8 @@ const Loading = () => (
     </svg>
 );
 
-export default Loading;
+const LoadingButton = ({ children, loading, ...props }) => (
+    <Button {...props}>{loading ? <Loading /> : children}</Button>
+);
+
+export default LoadingButton;

@@ -2,7 +2,9 @@ import Button from "./atoms/Button";
 
 const ConnectMetamask = ({ className, ...props }) => {
     return window.ethereum ? (
-        <Button className={className}>Connect with Metamask</Button>
+        <Button className={className} {...props}>
+            Connect with Metamask
+        </Button>
     ) : (
         <Button
             className={className}
@@ -15,7 +17,5 @@ const ConnectMetamask = ({ className, ...props }) => {
         </Button>
     );
 };
-
-// as="a"
 
 export default ConnectMetamask;

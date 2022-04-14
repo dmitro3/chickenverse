@@ -26,5 +26,8 @@ describe("ChickenNFT", () => {
 
         // should own NFT
         expect(await contract.isContentOwned(NFT_PATH)).to.equal(true);
+        expect(
+            await contract.tokenURI(await contract.getNFT(randomPerson.address))
+        ).to.equal(`ipfs://${NFT_PATH}`);
     });
 });

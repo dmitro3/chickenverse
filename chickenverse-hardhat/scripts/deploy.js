@@ -1,9 +1,9 @@
 const hre = require("hardhat");
 
 const main = async () => {
-    const Greeter = await hre.ethers.getContractFactory("ChickenNFT");
-    const greeter = await Greeter.deploy("deployed ChickenNFT");
-    await greeter.deployed();
+    const contractFatory = await hre.ethers.getContractFactory("ChickenNFT");
+    const contract = await contractFatory.deploy();
+    await contract.deployed();
 
     const [deployer] = await ethers.getSigners();
     console.log(`deployed to: ${contract.address}`);
