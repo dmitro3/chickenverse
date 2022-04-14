@@ -7,7 +7,6 @@ const contractAddress = "0x0295F6F70646A05C3Fc4765d6566608937FB1A8f";
 const useContract = (wallet) => {
     const [contract, setContract] = useState(null);
     const [count, setCount] = useState(0);
-    const [nft, setNft] = useState(null);
 
     useEffect(async () => {
         if (wallet) {
@@ -22,16 +21,10 @@ const useContract = (wallet) => {
 
             setContract(wavePortalContract);
             setCount(parseInt(await wavePortalContract.count()));
-
-            try {
-                setNft((await wavePortalContract.getNFT(wallet)).toNumber());
-            } catch (e) {
-                // means we probably don't have one yet
-            }
         }
     }, [wallet]);
 
-    return { contract, count, nft };
+    return { contract, count };
 };
 
 export default useContract;
