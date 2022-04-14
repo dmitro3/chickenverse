@@ -10,7 +10,7 @@ import NoNFT from "@/components/NoNFT";
 
 import PageTransition from "@/components/PageTransition";
 
-import WorldMap from "@/components/WorldMap";
+import { map, assets } from "@/components/engine";
 
 const MOVEMENT_SPEED = 50;
 
@@ -52,18 +52,20 @@ const Game = () => {
                 fullscreen: true,
                 width: 480 * 2,
                 height: 360 * 2,
-                background: [255, 255, 255],
+                background: [103, 171, 57],
             });
 
             canvasRef.current.focus();
 
-            debug.inspect = true;
-
             // load sprites
-            metadata.attributes.forEach(({ trait_type, value }) => {
-                const name = `${trait_type}-${value}`.toString().toLowerCase();
-                const path = `/game/layers/${trait_type}/${value}.png`;
+            assets.forEach((path) => {
+                const [value, trait_type] = path.split("/").reverse();
+                const name = `${trait_type}-${value
+                    .split(".")
+                    .shift()}`.toLowerCase();
+
                 console.log(name);
+
                 loadSprite(name, path);
             });
 
@@ -72,33 +74,38 @@ const Game = () => {
                 sliceY: 14,
             });
 
-            const tile = () => {};
-
-            for (let y = 0; y < WorldMap.length; y++) {
-                for (let x = 0; x < WorldMap[y].length; x++) {
-                    const tile = WorldMap[y][x];
+            for (let y = 0; y < map.length; y++) {
+                for (let x = 0; x < map[y].length; x++) {
+                    const tile = map[y][x];
                     const tileSize = 64;
 
-                    const realX = x * tileSize;
-                    const realY = y * tileSize;
+                    const worldOffset = camPos()
+                        .clone()
+                        .sub(vec2(width() / 2, height() / 2));
 
-                    if (realX < width() && realY < height()) {
+                    const realX = x * tileSize + worldOffset.x;
+                    const realY = y * tileSize + worldOffset.y;
+
+                    add([
+                        sprite("tiles", { frame: 0 }),
+                        pos(realX, realY),
+                        scale(tileSize / 16),
+                        area(),
+                        outview({ hide: true }),
+                        "tile",
+                    ]);
+
+                    if (tile !== 1) {
                         add([
-                            sprite("tiles", { frame: 0 }),
+                            sprite("tiles", { frame: tile - 1 }),
                             pos(realX, realY),
                             scale(tileSize / 16),
+                            area(),
+                            solid(),
+                            outview({ hide: true }),
+                            "tile",
+                            "decoration",
                         ]);
-
-                        if (tile !== 1) {
-                            add([
-                                sprite("tiles", { frame: tile - 1 }),
-                                pos(realX, realY),
-                                scale(tileSize / 16),
-                                area(),
-                                solid(),
-                                "decoration",
-                            ]);
-                        }
                     }
                 }
             }
@@ -118,7 +125,6 @@ const Game = () => {
                     hat: add([sprite("hats-chimney"), scale(5)]),
                     feet: add([sprite("feet-midget"), scale(5)]),
                     eyes: add([sprite("eyes-sunglasses"), scale(5), z(10)]),
-
                     isFlipped: false,
                     vel: vec2(0, 0),
                 },
@@ -128,6 +134,9 @@ const Game = () => {
                 const accessories = ["hat", "feet", "eyes"];
 
                 player.move(player.vel.x, player.vel.y);
+                camPos(
+                    vec2(Math.floor(player.pos.x), Math.floor(player.pos.y))
+                );
 
                 accessories.forEach((accessory) => {
                     if (player.hasOwnProperty(accessory)) {
