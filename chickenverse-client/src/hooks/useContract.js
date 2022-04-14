@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 import { useEffect, useState } from "react";
 
 import contractABI from "@/contracts/ChickenNFT.json";
-const contractAddress = "0x4Ff2ecF6a9e8A297Aa48209E85945F10704a7745";
+const contractAddress = "0x0295F6F70646A05C3Fc4765d6566608937FB1A8f";
 
 const useContract = (wallet) => {
     const [contract, setContract] = useState(null);
@@ -21,12 +21,13 @@ const useContract = (wallet) => {
             );
 
             setContract(wavePortalContract);
-            setCount(parseInt(await wavePortalContract.count()) + 1);
+            setCount(parseInt(await wavePortalContract.count()));
 
-            console.log((await wavePortalContract.getNFT(wallet)).toNumber());
-
-            // setContract(await wavePortalContract.getNFT(wallet));
-            // console.log((await wavePortalContract.getNFT(wallet)).toNumber());
+            try {
+                setNft((await wavePortalContract.getNFT(wallet)).toNumber());
+            } catch (e) {
+                // means we probably don't have one yet
+            }
         }
     }, [wallet]);
 
