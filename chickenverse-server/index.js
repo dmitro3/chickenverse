@@ -20,33 +20,44 @@ const chickenSchema = new PolySchema({
         y: PolyTypes.number,
     },
     isFlipped: PolyTypes.boolean,
+    emoji: PolyTypes.number,
 });
 
+// socket connection
 io.on("connection", (socket) => {
+    // save chicken id
+    let chickenId = null;
+
+    // on new chicken/chicken update
     socket.on("chicken", (data) => {
         if (chickenSchema.validate(data, true)) {
             chickens[data.id] = data;
+            chickenId = data.id;
         }
     });
 
+    // send chicken with id
     socket.on("request_chicken", (id) => {
         socket.emit(
             "respond_chicken",
             chickens[id] || {
-                id: 0,
+                id,
                 traits: [],
                 pos: {
                     x: 100,
                     y: 100,
                 },
+                emoji: 0,
             }
         );
     });
 
+    // "game loop"
     const interval = setInterval(() => {
         socket.emit("chickens", chickens);
     }, 1000 / 60);
 
+    // cleanup on disconnect
     socket.on("disconnect", () => {
         clearInterval(interval);
     });

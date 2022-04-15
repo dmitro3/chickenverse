@@ -11,8 +11,8 @@ import NoNFT from "@/components/NoNFT";
 
 import PageTransition from "@/components/PageTransition";
 
-import { map, assets } from "@/components/engine";
-
+import * as components from "@/components/engine/components";
+import { map, assets } from "@/components/engine/config";
 // don't look at this
 // it's really bad
 
@@ -28,7 +28,7 @@ const Game = () => {
     const [nft, setNft] = useState(null);
 
     const [kaboomed, setKaboomed] = useState(false);
-    const { socket, initialPos } = useSocket(nft);
+    const { socket, initialChicken } = useSocket(nft);
 
     // get NFT & metadata
     useEffect(async () => {
@@ -36,7 +36,7 @@ const Game = () => {
             try {
                 const nft = parseInt(location.hash.slice(1)) || 1;
 
-                //(await contract.getNFT(wallet)).toNumber();
+                // const nft = (await contract.getNFT(wallet)).toNumber();
 
                 if (nft) {
                     // prettier-ignore
@@ -50,7 +50,7 @@ const Game = () => {
 
     // actual game
     useEffect(async () => {
-        if (socket && nft && metadata && initialPos && !kaboomed) {
+        if (socket && nft && metadata && initialChicken && !kaboomed) {
             // initialize the game
             setKaboomed(true);
             kaboom({
@@ -60,6 +60,11 @@ const Game = () => {
                 height: 360 * 2,
                 background: [103, 171, 57],
             });
+
+            // globals
+            let offset = vec2(40, 40);
+            let currentEmoji = initialChicken.emoji;
+            let track;
 
             canvasRef.current.focus();
 
@@ -76,6 +81,7 @@ const Game = () => {
                     if (existing) {
                         existing.pos = vec2(chicken.pos.x, chicken.pos.y);
                         existing.isFlipped = chicken.isFlipped;
+                        existing.emoji.frame = chicken.emoji;
                         return;
                     }
 
@@ -102,6 +108,13 @@ const Game = () => {
                                 };
                             }, {}),
 
+                            emoji: add([
+                                sprite("emoji", {
+                                    frame: chicken.emoji,
+                                }),
+                                scale(3),
+                                z(100),
+                            ]),
                             isFlipped: chicken.isFlipped,
                         },
                     ]);
@@ -119,6 +132,9 @@ const Game = () => {
                                 component.flipX(multiplayerChicken.isFlipped);
                             }
                         });
+
+                        multiplayerChicken.emoji.pos =
+                            multiplayerChicken.pos.add(vec2(24, -50));
                     });
                 });
             });
@@ -128,6 +144,8 @@ const Game = () => {
             metadata.attributes.map(({ trait_type }) =>
                 trait_type.toLowerCase()
             );
+
+            // emojis
 
             const spriteNames = metadata.attributes.map(
                 ({ trait_type, value }) => {
@@ -148,6 +166,11 @@ const Game = () => {
             loadSprite("tiles", "/game/grass.png", {
                 sliceX: 25,
                 sliceY: 14,
+            });
+
+            loadSprite("emoji", "/game/emoji.png", {
+                sliceX: 8,
+                sliceY: 8,
             });
 
             for (let y = 0; y < map.length; y++) {
@@ -190,13 +213,30 @@ const Game = () => {
             loadSound("music", "/game/music.wav");
             // track = play("music", { loop: true });
 
+            // add emoji options
+            [1, 9, 23, 13].forEach((emojiType, i) => {
+                add([
+                    ...components.emoji(emojiType, 7 + i * 50),
+                    "emoji",
+                    `emoji-${emojiType}`,
+                ]);
+
+                onClick(`emoji-${emojiType}`, () => {
+                    currentEmoji = emojiType == 13 ? 0 : emojiType;
+                });
+            });
+
             // add player
             const player = add([
                 sprite("wearables-nothing"),
-                pos(initialPos.x, initialPos.y),
+                pos(initialChicken.pos.x, initialChicken.pos.y),
                 scale(5),
                 z(1),
-                area({ width: 10, height: 10, offset: [26 - 20, 22 - 20] }),
+                area({
+                    width: 10,
+                    height: 10,
+                    offset: [26 - offset.x, 22 - offset.y],
+                }),
                 solid(),
                 {
                     ...metadata.attributes.reduce(
@@ -215,6 +255,14 @@ const Game = () => {
                         {}
                     ),
 
+                    emoji: add([
+                        sprite("emoji", {
+                            frame: currentEmoji,
+                        }),
+                        scale(3),
+                        z(100),
+                    ]),
+
                     isFlipped: false,
                     vel: vec2(0, 0),
                 },
@@ -226,6 +274,7 @@ const Game = () => {
                     traits: spriteNames,
                     pos: { x: player.pos.x, y: player.pos.y },
                     isFlipped: player.isFlipped,
+                    emoji: player.emoji.frame,
                 });
 
                 player.move(player.vel.x, player.vel.y);
@@ -237,10 +286,13 @@ const Game = () => {
                     if (player.hasOwnProperty(accessory)) {
                         const component = player[accessory];
 
-                        component.pos = player.pos.clone().sub(vec2(20, 20));
+                        component.pos = player.pos.clone().sub(offset);
                         component.flipX(player.isFlipped);
                     }
                 });
+
+                player.emoji.pos = player.pos.sub(offset).add(vec2(24, -50));
+                player.emoji.frame = currentEmoji;
 
                 player.vel = player.vel.scale(0.9);
             });
@@ -270,15 +322,27 @@ const Game = () => {
                 player.vel = player.vel.add(0, MOVEMENT_SPEED);
             });
         }
-    }, [nft, metadata, socket, initialPos]);
+    }, [nft, metadata, socket, initialChicken]);
 
     return (
         <PageTransition>
             {nft && metadata ? (
-                <canvas
-                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-lg shadow-xl overflow-hidden border"
-                    ref={canvasRef}
-                ></canvas>
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none">
+                    <div className="flex gap-3 items-center absolute bottom-3 left-3">
+                        <img
+                            className="rounded-full w-10 h-10"
+                            src={`${baseImageURI}/${nft}.png`}
+                        />
+                        <h1 className="text-white text-lg font-semibold">
+                            Chickenverse NFT #{nft}
+                        </h1>
+                    </div>
+
+                    <canvas
+                        className="rounded-lg shadow-xl overflow-hidden border"
+                        ref={canvasRef}
+                    ></canvas>
+                </div>
             ) : (
                 <NoNFT />
             )}

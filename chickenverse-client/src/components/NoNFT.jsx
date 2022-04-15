@@ -15,7 +15,7 @@ const NoNFT = () => {
                     src={`/assets/${randomChicken.current}.png`}
                     className="rounded-lg h-64"
                 />
-                <div className="flex flex-col">
+                <div className="flex flex-col h-64">
                     <h1 className="text-5xl font-bold">Oh no!</h1>
                     <p className="text-lg mt-4">
                         Looks like you don't have a registered NFT. If you think

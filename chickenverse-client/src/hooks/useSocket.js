@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 
 const useSocket = (id) => {
     const [socket, setSocket] = useState(null);
-    const [initialPos, setInitialPos] = useState();
+    const [initialChicken, setInitialChicken] = useState();
 
     useEffect(() => {
         if (id) {
@@ -14,7 +14,7 @@ const useSocket = (id) => {
             newSocket
                 .emit("request_chicken", id)
                 .on("respond_chicken", (chicken) => {
-                    setInitialPos(chicken.pos);
+                    setInitialChicken(chicken);
                 });
 
             return () => {
@@ -23,7 +23,7 @@ const useSocket = (id) => {
         }
     }, [id]);
 
-    return { socket, initialPos };
+    return { socket, initialChicken };
 };
 
 export default useSocket;

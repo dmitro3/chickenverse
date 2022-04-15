@@ -8,7 +8,7 @@ const Button = tw.button`
     text-white
     bg-blue-600 hover:bg-blue-700
     select-none
-    text-lg
+    text-md md:text-lg
     w-fit
 `;
 

@@ -14,6 +14,9 @@ import Footer from "@/components/atoms/Footer";
 
 import PageTransition from "@/components/PageTransition";
 
+import A from "@/components/atoms/A";
+import { Link } from "react-router-dom";
+
 const Home = () => {
     const { wallet, connectWallet } = useWallet();
     const { count } = useContract(wallet);
@@ -22,22 +25,26 @@ const Home = () => {
 
     return (
         <PageTransition>
-            <div className="flex items-center flex-col-reverse xl:flex-row max-w-7xl mx-auto px-6 gap-8 min-h-screen">
-                <main className="xl:max-w-[50%]">
-                    <h1 className="text-7xl font-bold gradient-fix text-transparent bg-clip-text bg-gradient-to-r from-green-400  to-blue-500">
+            <div className="flex items-center flex-col mt-10 lg:mt-0 lg:flex-row max-w-7xl mx-auto px-6 gap-8 min-h-screen">
+                <main className="lg:max-w-[50%]">
+                    <h1 className="text-5xl md:text-6xl xl:text-7xl font-bold gradient-fix text-transparent bg-clip-text bg-gradient-to-r from-green-400  to-blue-500">
                         The Chickenverse
                     </h1>
-                    <p className="mt-8 leading-snug text-lg">
-                        Chickenverse is a collection of NFTs clucking around on
-                        the test Ethereum network. We've programmatically
+                    <p className="mt-4 md:mt-8 leading-snug md:text-lg">
+                        The Chickenverse is a collection of NFTs clucking around
+                        on the test Ethereum network. We've programmatically
                         generated 1,000 chickens from a variety of rare traits
-                        and characteristics. Consider adopting a chicken and
-                        entering the Chickenverse!{" "}
-                        {wallet && count && (
-                            <b className="font-semibold">
-                                Only {1000 - count + 1} chickens left.
-                            </b>
-                        )}
+                        and characteristics. By adopting a chicken, you'll be
+                        able to enter the{" "}
+                        <Link to="/app">
+                            <A $as="span">Chickenverse</A>
+                        </Link>{" "}
+                        and play with friends.{" "}
+                        <b className="font-semibold">
+                            {wallet && count
+                                ? `Only ${1000 - count + 1} chickens left.`
+                                : "Connect your wallet to get started."}
+                        </b>
                     </p>
 
                     {wallet ? (
