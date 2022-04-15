@@ -18,11 +18,15 @@ const Modal = ({ open, setOpen }) => {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState(<></>);
 
+    const [img, setImg] = useState("/egg.png");
+    const [egg, setEgg] = useState(true);
+
     const mintNFT = async () => {
         const metadataURI = `${baseMetadataURI}/${count}.json`;
 
         if (wallet && contract) {
             setLoading(true);
+            setEgg(false);
 
             const isOwned = await contract.isContentOwned(metadataURI);
 
@@ -33,6 +37,8 @@ const Modal = ({ open, setOpen }) => {
                     });
 
                     await txn.wait();
+
+                    setImg(`${baseImageURI}/${count + 1}.png`);
 
                     setMessage(
                         <span>
@@ -51,6 +57,8 @@ const Modal = ({ open, setOpen }) => {
                         "You can only keep one bird! Are you sure you haven't already minted one?"
                     );
                 }
+
+                setEgg(true);
             }
 
             setLoading(false);
@@ -102,9 +110,15 @@ const Modal = ({ open, setOpen }) => {
                                 </p>
                             ) : (
                                 <>
-                                    <img
-                                        className="rounded-xl w-full h-96"
-                                        src={`${baseImageURI}/${count + 1}.png`}
+                                    <motion.img
+                                        className="rounded-xl w-full h-96 crisp-fix"
+                                        src={img}
+                                        variants={{
+                                            hidden: { scale: 0 },
+                                            show: { scale: 1 },
+                                        }}
+                                        initial="show"
+                                        animate={egg ? "show" : "hidden"}
                                     />
                                     <h2 className="mt-4 font-semibold text-2xl">
                                         Mint your Chicken

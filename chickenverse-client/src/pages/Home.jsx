@@ -33,9 +33,11 @@ const Home = () => {
                         generated 1,000 chickens from a variety of rare traits
                         and characteristics. Consider adopting a chicken and
                         entering the Chickenverse!{" "}
-                        <b className="font-semibold">
-                            Only {1000 - count} chickens left.
-                        </b>
+                        {wallet && count && (
+                            <b className="font-semibold">
+                                Only {1000 - count + 1} chickens left.
+                            </b>
+                        )}
                     </p>
 
                     {wallet ? (

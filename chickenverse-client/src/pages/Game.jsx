@@ -3,6 +3,7 @@ import kaboom from "kaboom";
 
 import useWallet from "@/hooks/useWallet";
 import useContract from "@/hooks/useContract";
+import useSocket from "@/hooks/useSocket";
 
 import { baseImageURI, baseMetadataURI } from "@/utils/gateway";
 
@@ -12,10 +13,10 @@ import PageTransition from "@/components/PageTransition";
 
 import { map, assets } from "@/components/engine";
 
-const MOVEMENT_SPEED = 50;
-
 // don't look at this
 // it's really bad
+
+const MOVEMENT_SPEED = 50;
 
 const Game = () => {
     const canvasRef = useRef(null);
@@ -27,11 +28,15 @@ const Game = () => {
     const [nft, setNft] = useState(null);
 
     const [kaboomed, setKaboomed] = useState(false);
+    const { socket, initialPos } = useSocket(nft);
 
+    // get NFT & metadata
     useEffect(async () => {
         if (wallet && contract) {
             try {
-                const nft = (await contract.getNFT(wallet)).toNumber();
+                const nft = parseInt(location.hash.slice(1)) || 1;
+
+                //(await contract.getNFT(wallet)).toNumber();
 
                 if (nft) {
                     // prettier-ignore
@@ -43,10 +48,11 @@ const Game = () => {
         }
     }, [wallet, contract]);
 
+    // actual game
     useEffect(async () => {
-        if (nft && metadata && !kaboomed) {
+        if (socket && nft && metadata && initialPos && !kaboomed) {
+            // initialize the game
             setKaboomed(true);
-
             kaboom({
                 canvas: canvasRef.current,
                 fullscreen: true,
@@ -57,14 +63,84 @@ const Game = () => {
 
             canvasRef.current.focus();
 
+            // update chickens (multiplayer)
+            socket.on("chickens", (data) => {
+                Object.keys(data).map((key) => {
+                    const chicken = data[key];
+
+                    if (chicken.id === nft) {
+                        return;
+                    }
+
+                    const existing = get(`chicken-${key}`)[0];
+                    if (existing) {
+                        existing.pos = vec2(chicken.pos.x, chicken.pos.y);
+                        existing.isFlipped = chicken.isFlipped;
+                        return;
+                    }
+
+                    const multiplayerChicken = add([
+                        sprite("wearables-nothing"),
+                        pos(chicken.pos.x, chicken.pos.y),
+                        scale(5),
+                        z(20),
+                        area({ width: 10, height: 10, offset: [26, 22] }),
+                        solid(),
+                        outview({ hide: true }),
+                        `chicken-${key}`,
+                        {
+                            ...chicken.traits.reduce((acc, curr) => {
+                                const trait_type = curr.split("-").shift();
+
+                                return {
+                                    ...acc,
+                                    [trait_type]: add([
+                                        sprite(curr),
+                                        scale(5),
+                                        trait_type == "eyes" ? z(20) : z(10),
+                                    ]),
+                                };
+                            }, {}),
+
+                            isFlipped: chicken.isFlipped,
+                        },
+                    ]);
+
+                    multiplayerChicken.onUpdate(() => {
+                        traits.forEach((accessory) => {
+                            if (multiplayerChicken.hasOwnProperty(accessory)) {
+                                const component = multiplayerChicken[accessory];
+
+                                component.pos = vec2(
+                                    multiplayerChicken.pos.x,
+                                    multiplayerChicken.pos.y
+                                );
+
+                                component.flipX(multiplayerChicken.isFlipped);
+                            }
+                        });
+                    });
+                });
+            });
+
+            // current chicken traits
+            const traits = ["breed", "eyes", "hats", "feet"];
+            metadata.attributes.map(({ trait_type }) =>
+                trait_type.toLowerCase()
+            );
+
+            const spriteNames = metadata.attributes.map(
+                ({ trait_type, value }) => {
+                    return `${trait_type}-${value}`.toLowerCase();
+                }
+            );
+
             // load sprites
             assets.forEach((path) => {
                 const [value, trait_type] = path.split("/").reverse();
                 const name = `${trait_type}-${value
                     .split(".")
                     .shift()}`.toLowerCase();
-
-                console.log(name);
 
                 loadSprite(name, path);
             });
@@ -112,43 +188,59 @@ const Game = () => {
 
             // load music
             loadSound("music", "/game/music.wav");
+            // track = play("music", { loop: true });
 
             // add player
             const player = add([
-                sprite("breed-orpington"),
-                pos(100, 100),
+                sprite("wearables-nothing"),
+                pos(initialPos.x, initialPos.y),
                 scale(5),
                 z(1),
-                area({ width: 10, height: 10, offset: [26, 22] }),
+                area({ width: 10, height: 10, offset: [26 - 20, 22 - 20] }),
                 solid(),
                 {
-                    hat: add([sprite("hats-chimney"), scale(5)]),
-                    feet: add([sprite("feet-midget"), scale(5)]),
-                    eyes: add([sprite("eyes-sunglasses"), scale(5), z(10)]),
+                    ...metadata.attributes.reduce(
+                        (acc, { trait_type, value }, i) => {
+                            trait_type = trait_type.toLowerCase();
+
+                            return {
+                                ...acc,
+                                [trait_type]: add([
+                                    sprite(spriteNames[i]),
+                                    scale(5),
+                                    trait_type === "eyes" ? z(5) : z(1),
+                                ]),
+                            };
+                        },
+                        {}
+                    ),
+
                     isFlipped: false,
                     vel: vec2(0, 0),
                 },
             ]);
 
             player.onUpdate(() => {
-                const accessories = ["hat", "feet", "eyes"];
+                socket.emit("chicken", {
+                    id: nft,
+                    traits: spriteNames,
+                    pos: { x: player.pos.x, y: player.pos.y },
+                    isFlipped: player.isFlipped,
+                });
 
                 player.move(player.vel.x, player.vel.y);
                 camPos(
                     vec2(Math.floor(player.pos.x), Math.floor(player.pos.y))
                 );
 
-                accessories.forEach((accessory) => {
+                traits.forEach((accessory) => {
                     if (player.hasOwnProperty(accessory)) {
                         const component = player[accessory];
-                        component.pos = player.pos;
+
+                        component.pos = player.pos.clone().sub(vec2(20, 20));
                         component.flipX(player.isFlipped);
                     }
                 });
-
-                player.hat.pos = player.pos;
-                player.feet.pos = player.pos;
-                player.eyes.pos = player.pos;
 
                 player.vel = player.vel.scale(0.9);
             });
@@ -157,6 +249,7 @@ const Game = () => {
                 player.vel = player.vel.scale(0);
             });
 
+            // event listeners
             onKeyDown("right", () => {
                 player.vel = player.vel.add(MOVEMENT_SPEED, 0);
                 player.flipX(false);
@@ -177,13 +270,13 @@ const Game = () => {
                 player.vel = player.vel.add(0, MOVEMENT_SPEED);
             });
         }
-    }, [nft, metadata, wallet, contract]);
+    }, [nft, metadata, socket, initialPos]);
 
     return (
         <PageTransition>
             {nft && metadata ? (
                 <canvas
-                    // className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-lg shadow-xl overflow-hidden border"
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-lg shadow-xl overflow-hidden border"
                     ref={canvasRef}
                 ></canvas>
             ) : (
