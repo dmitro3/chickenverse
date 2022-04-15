@@ -44,8 +44,8 @@ io.on("connection", (socket) => {
                 id,
                 traits: [],
                 pos: {
-                    x: 100,
-                    y: 100,
+                    x: 500,
+                    y: 500,
                 },
                 emoji: 0,
             }

@@ -34,9 +34,9 @@ const Game = () => {
     useEffect(async () => {
         if (wallet && contract) {
             try {
-                const nft = parseInt(location.hash.slice(1)) || 1;
+                // const nft = parseInt(location.hash.slice(1)) || 1;
 
-                // const nft = (await contract.getNFT(wallet)).toNumber();
+                const nft = (await contract.getNFT(wallet)).toNumber();
 
                 if (nft) {
                     // prettier-ignore
@@ -140,7 +140,7 @@ const Game = () => {
             });
 
             // current chicken traits
-            const traits = ["breed", "eyes", "hats", "feet"];
+            const traits = ["breed", "eyes", "hats", "feet", "wearables"];
             metadata.attributes.map(({ trait_type }) =>
                 trait_type.toLowerCase()
             );
@@ -231,7 +231,7 @@ const Game = () => {
                 sprite("wearables-nothing"),
                 pos(initialChicken.pos.x, initialChicken.pos.y),
                 scale(5),
-                z(1),
+                z(30),
                 area({
                     width: 10,
                     height: 10,
@@ -248,7 +248,7 @@ const Game = () => {
                                 [trait_type]: add([
                                     sprite(spriteNames[i]),
                                     scale(5),
-                                    trait_type === "eyes" ? z(5) : z(1),
+                                    trait_type === "eyes" ? z(35) : z(30),
                                 ]),
                             };
                         },
@@ -269,29 +269,31 @@ const Game = () => {
             ]);
 
             player.onUpdate(() => {
-                socket.emit("chicken", {
-                    id: nft,
-                    traits: spriteNames,
-                    pos: { x: player.pos.x, y: player.pos.y },
-                    isFlipped: player.isFlipped,
-                    emoji: player.emoji.frame,
-                });
-
                 player.move(player.vel.x, player.vel.y);
                 camPos(
                     vec2(Math.floor(player.pos.x), Math.floor(player.pos.y))
                 );
 
+                const offsetPos = player.pos.clone().sub(offset);
+
+                socket.emit("chicken", {
+                    id: nft,
+                    traits: spriteNames,
+                    pos: { x: offsetPos.x, y: offsetPos.y },
+                    isFlipped: player.isFlipped,
+                    emoji: player.emoji.frame,
+                });
+
                 traits.forEach((accessory) => {
                     if (player.hasOwnProperty(accessory)) {
                         const component = player[accessory];
 
-                        component.pos = player.pos.clone().sub(offset);
+                        component.pos = offsetPos.clone();
                         component.flipX(player.isFlipped);
                     }
                 });
 
-                player.emoji.pos = player.pos.sub(offset).add(vec2(24, -50));
+                player.emoji.pos = offsetPos.add(vec2(24, -50));
                 player.emoji.frame = currentEmoji;
 
                 player.vel = player.vel.scale(0.9);

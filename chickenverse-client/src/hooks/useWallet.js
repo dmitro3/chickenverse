@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 
+// use wallet hook
 const useWallet = () => {
     const [wallet, setWallet] = useState(null);
     const [error, setError] = useState(null);
