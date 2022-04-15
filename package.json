@@ -1,0 +1,27 @@
+{
+    "dependencies": {
+        "express": "^4.17.3"
+    },
+    "name": "chickenverse",
+    "description": "Enter the Chickenverse!",
+    "version": "1.0.0",
+    "main": "replit.js",
+    "type": "module",
+    "devDependencies": {},
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "install": "npm intall && cd chickenverse-client && npm install && cd ../chickenverse-server && npm install",
+        "deploy": "cd chickenverse-client && npm run build && cd .. && node replit.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/nathan-pham/chickenverse.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/nathan-pham/chickenverse/issues"
+    },
+    "homepage": "https://github.com/nathan-pham/chickenverse#readme"
+}
