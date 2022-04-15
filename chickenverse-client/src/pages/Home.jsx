@@ -68,7 +68,7 @@ const Home = () => {
 
                 <Preview />
 
-                <Modal {...{ open, setOpen, count }} />
+                <Modal {...{ open, setOpen }} />
             </div>
         </PageTransition>
     );

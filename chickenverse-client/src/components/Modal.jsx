@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ethers } from "ethers";
 
 import LoadingButton from "./LoadingButton";
@@ -11,7 +11,7 @@ import useContract from "@/hooks/useContract";
 import { baseMetadataURI, baseImageURI } from "@/utils/gateway";
 
 const Modal = ({ open, setOpen }) => {
-    const { wallet } = useWallet();
+    const { wallet, forceFetchWallet } = useWallet();
     const { contract, count } = useContract(wallet);
 
     const modalRef = useRef(null);
@@ -20,6 +20,12 @@ const Modal = ({ open, setOpen }) => {
 
     const [img, setImg] = useState("/egg.png");
     const [egg, setEgg] = useState(true);
+
+    useEffect(() => {
+        if (!wallet) {
+            forceFetchWallet();
+        }
+    }, [open]);
 
     const mintNFT = async () => {
         const metadataURI = `${baseMetadataURI}/${count}.json`;

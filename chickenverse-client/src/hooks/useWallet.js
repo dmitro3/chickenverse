@@ -5,6 +5,11 @@ const useWallet = () => {
     const [wallet, setWallet] = useState(null);
     const [error, setError] = useState(null);
 
+    const [force, setForce] = useState(0);
+    const forceFetchWallet = () => {
+        setForce(force + 1);
+    };
+
     // check if Metmask installed/already authorized
     useEffect(async () => {
         if (!window.ethereum) {
@@ -23,7 +28,7 @@ const useWallet = () => {
                 "Metmask is not authorized or wrong network (please use Rinkeby)"
             );
         }
-    }, []);
+    }, [force]);
 
     // onClick for connecting a wallet
     const connectWallet = async () => {
@@ -45,7 +50,7 @@ const useWallet = () => {
         }
     };
 
-    return { wallet, connectWallet, error };
+    return { wallet, connectWallet, forceFetchWallet, error };
 };
 
 export default useWallet;
