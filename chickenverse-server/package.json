@@ -5,12 +5,18 @@
     "main": "index.js",
     "type": "module",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "node index.js",
+        "dev": "nodemon index.js"
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "socket.io": "^4.4.1"
+        "socket.io": "^4.4.1",
+        "the-poly-schema": "^1.0.2"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.15"
     }
 }
