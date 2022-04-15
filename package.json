@@ -10,7 +10,7 @@
     "devDependencies": {},
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "install": "npm intall && cd chickenverse-client && npm install && cd ../chickenverse-server && npm install",
+        "install": "npm install && cd chickenverse-client && npm install && cd ../chickenverse-server && npm install",
         "deploy": "cd chickenverse-client && npm run build && cd .. && node replit.js"
     },
     "repository": {
